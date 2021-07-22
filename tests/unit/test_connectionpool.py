@@ -21,6 +21,7 @@ class FakeConnection:
 class FakePool:
     def __init__(self, *args, **kwargs):
         self.closed = False
+        self.maxconn = kwargs["maxconn"]
 
     def getconn(self, key=None):
         return FakeConnection()
@@ -34,7 +35,7 @@ class FakePool:
 @pytest.fixture
 def pool():
     simple_pool = FakePool(**config)
-    pool = ConnectionPool(original_pool=simple_pool, **config)
+    pool = ConnectionPool(idle_time=idle_time, original_pool=simple_pool)
     yield pool
     pool.closeall()
 

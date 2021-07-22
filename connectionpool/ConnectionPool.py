@@ -1,21 +1,25 @@
-from psycopg2.pool import PoolError
+from psycopg2.pool import SimpleConnectionPool, PoolError
 from psycopg2 import extensions as _ext
 import threading
 import time
 
-class ConnectionPool():
+class ConnectionPool:
     def __init__(
         self,
-        maxconn: int,
         idle_time: int,
-        original_pool,
+        original_pool=None,
         *args,
-        # To use the same config object as is used for the original pool
         **kwargs,
     ):
-        # Construct Semaphore with maxconn
-        self.semaphore = threading.Semaphore(int(maxconn))
-        self._org_pool = original_pool
+        if not original_pool:
+            self._org_pool = SimpleConnectionPool(*args, **kwargs)
+        else:
+            self._org_pool = original_pool
+        # Construct Semaphore with maxconn. This will enable restricting
+        # the number of connections that are being used to not exceed the
+        # number of connections which causes the psycopg2 pool to raise an
+        # exception
+        self.semaphore = threading.Semaphore(int(self._org_pool.maxconn))
         self._key = 0
         self._idle_pool = []
         self._last_used = {} # id(conn): time

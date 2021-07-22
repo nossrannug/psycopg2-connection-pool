@@ -13,6 +13,7 @@ Improved connection pool for psycopg2
 - It is thread safe
 
 ## To use this pool:
+### Out of the box:
 ```python
 from psycopg2.pool import SimpleConnectionPool
 from connectionpool import ConnectionPool
@@ -23,16 +24,34 @@ config = {
   ...
 }
 
-simple_pool = SimpleConnectionPool(**config)
+# This constructs a SimpleConnectionPool. ConnectionPool is thread safe
+# so there is no need to use ThreadedConnectionPool
 pool = ConnectionPool(
   idle_time=2 # time in sec
-  original_pool=simple_pool,
   **config,
 )
 ```
 
+### Custom pool:
+```python
+class MyCustomConnectionPool(SimpleConnectionPool): # Also works with Threaded
+  ...
+
+# If you have a custom connection pool that you would rather use that
+# implements the same methods as the psycopg2 connection pools you can
+# also use that with ConnectionPool
+custom_pool = MyCustomConnectionPool(**config)
+pool = ConnectionPool(
+  idle_time=2,
+  original_pool=custom_pool,
+  # Then there is no need to pass in the config
+)
+```
+
+### Methods:
 The ConnectionPool class has the same function signatures as the
 SimpleConnectionPool class
+
 ```python
 # Get a connection:
 conn = pool.getconn()
